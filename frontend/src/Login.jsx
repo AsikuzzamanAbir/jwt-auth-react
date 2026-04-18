@@ -2,24 +2,25 @@ import { useState } from 'react'
 import axios from 'axios'
 
 export default function Login({ onLogin }) {
-  const [form, setForm] = useState({ username: '', password: '' })
+  const [form, setForm] = useState({ userName: '', password: '' })
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
-    if (!form.username || !form.password) {
+    if (!form.userName || !form.password) {
       setMsg('Please fill in all fields')
       return
     }
     setLoading(true)
     setMsg('')
     try {
-      const res = await axios.post('http://localhost:5000/login', form)
-      const token = res.data.token
+      const res = await axios.post('http://localhost:8001/user/login', form)
+      console.log('Login response:', res.data)
+      const token = res.data.token || res.data.jwt || res.data.accessToken || res.data
       localStorage.setItem('token', token)
       onLogin(token)
     } catch (err) {
-      if (err.response) setMsg(err.response.data.message)
+      if (err.response) setMsg(err.response.data)
       else setMsg('Cannot reach server — is backend running?')
     } finally {
       setLoading(false)
@@ -32,8 +33,8 @@ export default function Login({ onLogin }) {
         <label>Username</label>
         <input
           placeholder="Enter your username"
-          value={form.username}
-          onChange={e => setForm({ ...form, username: e.target.value })}
+          value={form.userName}
+          onChange={e => setForm({ ...form, userName: e.target.value })}
           onKeyDown={e => e.key === 'Enter' && handleSubmit()}
         />
       </div>
