@@ -1,38 +1,56 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useState } from 'react'
+import axios from 'axios'
 
 export default function Login({ onLogin }) {
-  const [form, setForm] = useState({ username: '', password: '' });
-  const [msg, setMsg] = useState('');
+  const [form, setForm] = useState({ username: '', password: '' })
+  const [msg, setMsg] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post('http://localhost:5000/login', form);
-      const token = res.data.token;
-      localStorage.setItem('token', token); // save token
-      onLogin(token);
-    } catch (err) {
-      setMsg(err.response?.data?.message || 'Error');
+  const handleSubmit = async () => {
+    if (!form.username || !form.password) {
+      setMsg('Please fill in all fields')
+      return
     }
-  };
+    setLoading(true)
+    setMsg('')
+    try {
+      const res = await axios.post('http://localhost:5000/login', form)
+      const token = res.data.token
+      localStorage.setItem('token', token)
+      onLogin(token)
+    } catch (err) {
+      if (err.response) setMsg(err.response.data.message)
+      else setMsg('Cannot reach server — is backend running?')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div>
-      <h2>Login</h2>
-      <input
-        placeholder="Username"
-        value={form.username}
-        onChange={e => setForm({ ...form, username: e.target.value })}
-      /><br /><br />
-      <input
-        type="password"
-        placeholder="Password"
-        value={form.password}
-        onChange={e => setForm({ ...form, password: e.target.value })}
-      /><br /><br />
-      <button onClick={handleSubmit}>Login</button>
-      {msg && <p style={{ color: 'red' }}>{msg}</p>}
+    <div className="form-body">
+      <div className="input-group">
+        <label>Username</label>
+        <input
+          placeholder="Enter your username"
+          value={form.username}
+          onChange={e => setForm({ ...form, username: e.target.value })}
+          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+        />
+      </div>
+      <div className="input-group">
+        <label>Password</label>
+        <input
+          type="password"
+          placeholder="Enter your password"
+          value={form.password}
+          onChange={e => setForm({ ...form, password: e.target.value })}
+          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+        />
+      </div>
+      {msg && <div className="msg error">{msg}</div>}
+      <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
+        {loading ? <span className="spinner" /> : 'Login →'}
+      </button>
     </div>
-  );
+  )
 }
